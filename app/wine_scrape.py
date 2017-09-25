@@ -3,11 +3,14 @@ from flask import Flask, render_template, redirect, url_for, session
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, SelectField
-
+from flask_script import Manager, Shell
+from models import db, User
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 bootstrap = Bootstrap(app)
+manager = Manager(app)
+manager.add_command("shell", Shell(make_context=make_shell_context))
 
 class SearchForm(FlaskForm):
 	producer = StringField("Producer")
@@ -37,5 +40,8 @@ def search():
 		return redirect(url_for('search'))
 	return render_template('form_bs.html', form=form, producer=session.get('producer'), year=session.get('year'))
 
+def make_shell_context():
+	return dict(app=app, db=db, User=User)
+
 if __name__ == "__main__":
-	app.run()
+	manager.run()

@@ -1,0 +1,4 @@
+Much of the code in this application used Miguel Grinberg's book "Flask Web Development" for guidance. Thank you Miguel for a wonderful, readable intro to Flask.
+
+Activate virtual environment using 'source winenv/bin/activate'
+Add environment variables using 'source env_setup.sh'
