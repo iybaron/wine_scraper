@@ -1,4 +1,3 @@
-import os
 from threading import Thread
 from . import mail
 from flask_mail import Message
