@@ -1,2 +1,3 @@
 winenv/
 env_setup.sh
+__pycache__
