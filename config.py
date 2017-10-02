@@ -1,8 +1,14 @@
 import os
 
+# Absolute path to base directory of project
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+# Base Application Configuration class
 class Config:
+	'''
+	Base class for application configuration.
+	Contains config variables that are common to all configurations
+	'''
 	SECRET_KEY = os.getenv('SECRET_KEY')
 	SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 	SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -14,6 +20,9 @@ class Config:
 		pass
 
 class DevelopmentConfig(Config):
+	'''
+	Configuration for development
+	'''
 	DEBUG = True
 	MAIL_SERVER = 'smtp.googlemail.com'
 	MAIL_PORT = 587
@@ -25,16 +34,23 @@ class DevelopmentConfig(Config):
 		'@localhost:3306/wine_scraper_devdb'
 
 class TestingConfig(Config):
+	'''
+	Configuration for testing
+	'''
 	TESTING = True
 	SQLALCHEMY_DATABASE_URI =\
 		'mysql+mysqlconnector://root:' + os.getenv('DB_PASS') + \
 		'@localhost:3306/wine_scraper_testdb'
 
 class ProductionConfig(Config):
+	'''
+	Configuration for production
+	'''
 	SQLALCHEMY_DATABASE_URI =\
 		'mysql+mysqlconnector://root:' + os.getenv('DB_PASS') + \
 		'@localhost:3306/wine_scraper_db'
 
+# Dictionary of configurations. Will be passed to Application Factory
 config = {
 	'development': DevelopmentConfig,
 	'testing': TestingConfig,
