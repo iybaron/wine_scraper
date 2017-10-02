@@ -1,4 +1,5 @@
 from flask import render_template, redirect, url_for, session
+from flask_login import login_required
 from .forms import SearchForm
 from . import main
 
@@ -7,6 +8,7 @@ def index():
 	return render_template('index.html')
 
 @main.route('/search', methods=['GET', 'POST'])
+@login_required
 def search():
 	producer = None 
 	year = None
