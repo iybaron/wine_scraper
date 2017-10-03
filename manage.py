@@ -9,6 +9,7 @@ app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 
 # Manager provides command line interaction with application
 manager = Manager(app)
+migrate = Migrate(app, db)
 
 # Provide shell interaction with app context
 def make_shell_context():

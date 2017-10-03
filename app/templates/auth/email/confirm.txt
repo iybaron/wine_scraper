@@ -1,0 +1,11 @@
+Hi {{ user.username }},
+
+Welcome to Wine Aid.
+
+To confirm your account please click the following link:
+
+{{ url_for('auth.confirm', token=token, _external=True) }}
+
+Have a great day,
+
+Isaac
