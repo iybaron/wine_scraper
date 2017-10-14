@@ -1,3 +1,5 @@
 winenv/
 env_setup.sh
 __pycache__
+.idea/
+*.pyc
