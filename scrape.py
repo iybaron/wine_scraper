@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 import re
 
+count = 0
 
 def scrape_tkwine():
 	"""
@@ -29,28 +30,48 @@ def scrape_winebid():
 	"""
 	Scrapes WineBid for current listings prices
 	"""
+
+	def scrape_page(pageUrl):
+		global count
+		count += 1
+		# Scrapes single page for wine listing info
+		page = requests.get('https://www.winebid.com' + pageUrl)
+		soup = BeautifulSoup(page.content, 'lxml')
+		
+		items = soup.find('div', class_='itemResults').contents
+		for item in items:
+			if isinstance(item, Tag):
+				item_info = item.find('div', class_='info')
+				name = item_info.find('p', class_='name').find('a').text
+				try:
+					itemAlerts = item_info.find('div', class_='itemAlerts').find('p').text
+				except:
+					itemAlerts = 'None'
+				price = item.find('div', class_='price').find('a').text
+				print(name, itemAlerts, price)
+
+		# Find next link and scrape next page (recursive call)
+		link = soup.find('span', class_='pageNavigation').contents[-2]
+		if 'NEXT' in link.descendants:
+			scrape_page(link['href'])
+			
 	home_page = requests.get("https://www.winebid.com/BuyWine")
 	soup = BeautifulSoup(home_page.content, 'lxml')
 
 	# Navigate to 'Buy Now' page
 	link = soup.find('a', text='Shop Buy Now')
-	buy_page = requests.get("https://www.winebid.com" + link['href'])
-	soup = BeautifulSoup(buy_page.content, 'lxml')
+	
+	# Make recursive call to scrap the Buy Now section of the site
+	scrape_page(link['href'])
 
-	items = soup.find('div', class_='itemResults').contents
-	# Scrape pages one at a time
-	for item in items:
-		if isinstance(item, Tag):
-			item_info = item.find('div', class_='info')
-			name = item_info.find('p', class_='name').find('a').text
-			try:
-				itemAlerts = item_info.find('div', class_='itemAlerts').find('p').text
-			except:
-				itemAlerts = 'None'
-			price = item.find('div', class_='price').find('a').text
-			print(name, itemAlerts, price)
 
+		
+
+
+
+	
 
 
 if __name__ == "__main__":
 	scrape_winebid()
+	print(count)

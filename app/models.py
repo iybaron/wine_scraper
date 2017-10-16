@@ -4,6 +4,23 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
+# AuctionSite table
+class AuctionSite(db.Model):
+	__tablename__ = 'auction_sites'
+	id = db.Column(db.Integer, primary_key=True)
+	name = db.Column(db.String(64), unique=True)
+	wines = db.relationship('Listing', backref='auction_sites')
+
+# Listing table
+def Listing(db.Model):
+	__tablename__ = 'listings'
+	id = db.Column(db.Integer, primary_key=True)
+	year = db.Column(db.Integer)
+	producer = db.Column(db.String(64), index=True)
+	alert = db.Column(db.String(64))
+	price = db.Column(db.Float)
+	site_id = db.Column(db.Integer, db.ForeignKey('auction_sites.id'))
+
 # User table
 class User(UserMixin, db.Model):
 	__tablename__ = 'users'
