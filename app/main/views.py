@@ -2,6 +2,8 @@ from flask import render_template, redirect, url_for, session
 from flask_login import login_required
 from .forms import SearchForm
 from . import main
+from ..scrape import scrape_all
+
 
 # Front page
 @main.route('/', methods=['GET'])
@@ -12,6 +14,7 @@ def index():
 @main.route('/search', methods=['GET', 'POST'])
 @login_required
 def search():
+	scrape_all()
 	producer = None 
 	year = None
 	form = SearchForm()

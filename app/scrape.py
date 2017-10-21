@@ -1,33 +1,59 @@
 import requests
 from bs4 import BeautifulSoup, Tag
 import re
+from . import db
+from .models import AuctionSite, Listing
 
+def scrape_all():
+	add_site_to_db_if_new('TK Wine')
+	scrape_tkwine()
+	add_site_to_db_if_new('Spectrum')
+	scrape_spectrum()
+	add_site_to_db_if_new('Winebid')
+	scrape_winebid()
 
 def scrape_tkwine():
 	"""
 	Scrapes TKWine ebay auction site for current listings prices
 	"""
-
+	
 	page = requests.get("http://stores.ebay.com/tkwine")
 
 	soup = BeautifulSoup(page.content, 'lxml')
-	titles = soup.find_all('div', class_='title')
-	titles.extend(soup.find_all('div', class_='desc'))
+	bottles = soup.find_all('div', class_='title')
+	bottles.extend(soup.find_all('div', class_='desc'))
 
+	# Separate year from producer
+	years = []
+	producers = []
+	for bottle in bottles:
+		year = None
+		bottle_info = bottle.get_text().strip()
+		if re.match(r'([1-2][0-9][0-9][0-9]).*', bottle_info):
+			year = re.sub(r'([1-2][0-9][0-9][0-9])(.*)', r'\1', bottle_info)
+			producer = re.sub(r'([1-2][0-9][0-9][0-9])(.*)', r'\2', bottle_info)
+		else:
+			producer = bottle_info
+		years.append(year)
+		producers.append(producer)
+
+	# Find prices for all bottles
 	prices = soup.find_all('div', class_='price')
 
 	for item in soup.find('div', class_='curr'):
 		if item.parent.class_ == 'price_bin':
 			prices.append(item)
 
-	for title, price in zip(titles, prices):
-		print(title.get_text().strip(), price.get_text())
+
+	for year, producer, price in zip(years, producers, prices):
+		print(year, producer, price.get_text())
 
 
 def scrape_spectrum():
 	"""
 	Scrapes Spectrum Wine Auctions
 	"""
+	
 	def scrape_page(pageUrl):
 		page = requests.get('http://spectrumwineretail.com' + pageUrl)
 		soup = BeautifulSoup(page.content, 'lxml')
@@ -59,6 +85,7 @@ def scrape_winebid():
 	"""
 	Scrapes WineBid for current listings prices
 	"""
+	
 	def scrape_page(pageUrl):
 		# Scrapes single page for wine listing info
 		page = requests.get('https://www.winebid.com' + pageUrl)
@@ -94,8 +121,16 @@ def scrape_winebid():
 	# Make recursive call to scrap the Buy Now section of the site
 	scrape_page(link['href'])
 
+def add_site_to_db_if_new(site_name):
+	if db.session.query(AuctionSite.id).filter( \
+			AuctionSite.name==site_name).scalar() is None:
+		new_site = AuctionSite(name=site_name)
+		db.session.add(new_site)
+		db.session.commit()
+
+
 
 
 if __name__ == "__main__":
-	scrape_winebid()
+	scrape_tkwine()
 	

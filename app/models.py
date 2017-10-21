@@ -12,13 +12,16 @@ class AuctionSite(db.Model):
 	wines = db.relationship('Listing', backref='auction_sites')
 
 # Listing table
-def Listing(db.Model):
+class Listing(db.Model):
 	__tablename__ = 'listings'
 	id = db.Column(db.Integer, primary_key=True)
 	year = db.Column(db.Integer)
 	producer = db.Column(db.String(64), index=True)
 	alert = db.Column(db.String(64))
 	price = db.Column(db.Float)
+	time_added = db.Column(db.DateTime)
+	time_removed = db.Column(db.DateTime)
+	active = db.Column(db.Boolean)
 	site_id = db.Column(db.Integer, db.ForeignKey('auction_sites.id'))
 
 # User table
