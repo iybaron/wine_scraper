@@ -15,13 +15,15 @@ class AuctionSite(db.Model):
 class Listing(db.Model):
 	__tablename__ = 'listings'
 	id = db.Column(db.Integer, primary_key=True)
-	year = db.Column(db.Integer)
+	year = db.Column(db.Integer, index=True)
 	producer = db.Column(db.String(64), index=True)
 	alert = db.Column(db.String(64))
 	price = db.Column(db.Float)
+	old_price = db.Column(db.Float)
 	time_added = db.Column(db.DateTime)
 	time_removed = db.Column(db.DateTime)
 	active = db.Column(db.Boolean)
+	item_code = db.Column(db.String(32))
 	site_id = db.Column(db.Integer, db.ForeignKey('auction_sites.id'))
 
 # User table
