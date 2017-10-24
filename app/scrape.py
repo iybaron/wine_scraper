@@ -39,6 +39,13 @@ def scrape_tkwine():
 			producers.append(producer)
 		return producers
 
+	def get_item_codes(bottles):
+		item_codes = []
+		for bottle in bottles:
+			link = bottle.find('a')['href']
+			item_code = re.sub(r'(.*)(/)([0-9]+)', r'\3', link)
+			item_codes.append(item_code)
+		return item_codes
 
 	page = requests.get("http://stores.ebay.com/tkwine")
 
@@ -46,9 +53,10 @@ def scrape_tkwine():
 	bottles = soup.find_all('div', class_='title')
 	bottles.extend(soup.find_all('div', class_='desc'))
 
-	# Separate year from producer
+	# Separate needed information html tag objects
 	years = get_years(bottles)
 	producers = get_producers(bottles)
+	item_codes = get_item_codes(bottles)
 
 	# Find prices for all bottles
 	prices = soup.find_all('div', class_='price')
@@ -59,25 +67,36 @@ def scrape_tkwine():
 
 	#for year, producer, price in zip(years, producers, prices):
 	#	print(year, producer, price.get_text())
+	for item_code in item_codes:
+		print(item_code)
 
 
 def scrape_spectrum():
 	"""
 	Scrapes Spectrum Wine Auctions
 	"""
+	def get_item_codes(soup):
+		item_codes = []
+		input_objects = soup.select('div.product-list-control input')
+		for input_object in input_objects:
+			attribute_with_code = input_object['onclick']
+			item_code = re.sub(r'(.*)(productList)([0-9]+)(.*)', r'\3', attribute_with_code)
+			item_codes.append(item_code)
+		return item_codes
+
 	def scrape_page(pageUrl):
 		page = requests.get('http://spectrumwineretail.com' + pageUrl)
 		soup = BeautifulSoup(page.content, 'lxml')
 		items = soup.select('div.product-list-options h5 a')
 		prices = soup.select('span.product-list-cost-value')
-
-		# Remove all newline values from items
-		#items = [item for item in items if isinstance(item, Tag)]
-		#print(items)
+		item_codes = get_item_codes(soup)
+		
 		for item, price in zip(items, prices):
 			producer = re.sub(r'(.+)([0-9][0-9][0-9][0-9]).*', r'\1', item.text)
 			year = re.sub(r'(.+)([0-9][0-9][0-9][0-9]).*', r'\2', item.text)
-			print(producer, year, price.text)
+			#print(producer, year, price.text)
+		for item_code in item_codes:
+			print(item_code)
 
 		link = soup.find('a', class_='pager-item-next')
 		if link != None:
@@ -87,10 +106,9 @@ def scrape_spectrum():
 
 	home_page = requests.get('http://spectrumwineretail.com/country.aspx')
 	soup = BeautifulSoup(home_page.content, 'lxml')
-	#soup.find_all('div', class_='category-list-item-head')
 	links = soup.select('div.category-list-item-head a')
-	#for link in links:
-	#	scrape_page(link['href'])
+	for link in links:
+		scrape_page(link['href'])
 
 def scrape_winebid():
 	"""
@@ -115,8 +133,10 @@ def scrape_winebid():
 			except:
 				itemAlerts = 'None'
 			price = item.find('div', class_='price').find('a').text
-			
+			item_code = item['data-item-id']
+
 			#print(name, itemAlerts, price)
+			print(item_code)
 
 		# Find link to next page and make a recursive call
 		link = soup.find('span', class_='pageNavigation').contents[-2]
