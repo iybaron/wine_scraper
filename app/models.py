@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import current_app
 from . import db, login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,13 +17,13 @@ class Listing(db.Model):
 	__tablename__ = 'listings'
 	id = db.Column(db.Integer, primary_key=True)
 	year = db.Column(db.Integer, index=True)
-	producer = db.Column(db.String(64), index=True)
-	alert = db.Column(db.String(64))
-	price = db.Column(db.Float)
-	old_price = db.Column(db.Float)
-	time_added = db.Column(db.DateTime)
-	time_removed = db.Column(db.DateTime)
-	active = db.Column(db.Boolean)
+	producer = db.Column(db.String(256), index=True)
+	alert = db.Column(db.String(64), default=None)
+	price = db.Column(db.String(16))
+	old_price = db.Column(db.String(16), default=None)
+	time_added = db.Column(db.DateTime, default=datetime.utcnow())
+	time_removed = db.Column(db.DateTime, default=None)
+	active = db.Column(db.Boolean, default=True)
 	item_code = db.Column(db.String(32))
 	site_id = db.Column(db.Integer, db.ForeignKey('auction_sites.id'))
 

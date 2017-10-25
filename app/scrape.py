@@ -1,3 +1,4 @@
+import sys
 import requests
 from bs4 import BeautifulSoup, Tag
 import re
@@ -5,17 +6,16 @@ from . import db
 from .models import AuctionSite, Listing
 
 def scrape_all():
-	add_site_to_db_if_new('TK Wine')
 	scrape_tkwine()
-	add_site_to_db_if_new('Spectrum')
 	scrape_spectrum()
-	add_site_to_db_if_new('Winebid')
 	scrape_winebid()
 
 def scrape_tkwine():
 	"""
 	Scrapes TKWine ebay auction site for current listings prices
 	"""
+	site_name = 'TK Wine'
+	add_site_to_db_if_new(site_name)
 	def get_years(bottles):
 		years = []
 		for bottle in bottles:
@@ -36,7 +36,7 @@ def scrape_tkwine():
 			else:
 				producer = bottle_info
 			
-			producers.append(producer)
+			producers.append(producer.strip())
 		return producers
 
 	def get_item_codes(bottles):
@@ -59,22 +59,25 @@ def scrape_tkwine():
 	item_codes = get_item_codes(bottles)
 
 	# Find prices for all bottles
-	prices = soup.find_all('div', class_='price')
+	price_tags = soup.find_all('div', class_='price')
+	price_tags.extend(soup.select('.price_bin div.curr'))
 
-	for item in soup.find('div', class_='curr'):
-		if item.parent.class_ == 'price_bin':
-			prices.append(item)
+	prices = []
+	for tag in price_tags:
+		price = re.sub(r'(.*)(\$)([0-9]+\.[0-9][0-9])(.*)', r'\2\3', tag.get_text())
+		prices.append(price)
 
-	#for year, producer, price in zip(years, producers, prices):
-	#	print(year, producer, price.get_text())
-	for item_code in item_codes:
-		print(item_code)
+	for year, producer, price, item_code in zip(years, producers, prices, item_codes):
+		add_row_to_db_if_new(year, producer, price, item_code, site_name)
 
 
 def scrape_spectrum():
 	"""
 	Scrapes Spectrum Wine Auctions
 	"""
+	site_name = 'Spectrum'
+	add_site_to_db_if_new(site_name)
+
 	def get_item_codes(soup):
 		item_codes = []
 		input_objects = soup.select('div.product-list-control input')
@@ -87,16 +90,19 @@ def scrape_spectrum():
 	def scrape_page(pageUrl):
 		page = requests.get('http://spectrumwineretail.com' + pageUrl)
 		soup = BeautifulSoup(page.content, 'lxml')
+		
 		items = soup.select('div.product-list-options h5 a')
 		prices = soup.select('span.product-list-cost-value')
 		item_codes = get_item_codes(soup)
 		
-		for item, price in zip(items, prices):
-			producer = re.sub(r'(.+)([0-9][0-9][0-9][0-9]).*', r'\1', item.text)
-			year = re.sub(r'(.+)([0-9][0-9][0-9][0-9]).*', r'\2', item.text)
-			#print(producer, year, price.text)
-		for item_code in item_codes:
-			print(item_code)
+		for item, price, item_code in zip(items, prices, item_codes):
+			if re.match(r'(.+)([0-9][0-9][0-9][0-9]).*', item.text):
+				producer = re.sub(r'(.+)([0-9][0-9][0-9][0-9]).*', r'\1', item.text)
+				year = re.sub(r'(.+)([0-9][0-9][0-9][0-9]).*', r'\2', item.text)
+			else:
+				producer = item.text
+				year = None
+			add_row_to_db_if_new(year, producer, price.text, item_code, site_name)
 
 		link = soup.find('a', class_='pager-item-next')
 		if link != None:
@@ -114,6 +120,8 @@ def scrape_winebid():
 	"""
 	Scrapes WineBid for current listings prices
 	"""
+	site_name = 'Winebid'
+	add_site_to_db_if_new(site_name)
 	def scrape_page(pageUrl):
 		# Scrapes single page for wine listing info
 		page = requests.get('https://www.winebid.com' + pageUrl)
@@ -126,17 +134,26 @@ def scrape_winebid():
 
 		for item in items:
 			
-			item_info = item.find('div', class_='info')
-			name = item_info.find('p', class_='name').find('a').text
+			info_tag = item.find('div', class_='info')
+			listing_text = info_tag.find('p', class_='name').find('a').text
+			
+			if re.match(r'([1-2][0-9][0-9][0-9])(.*)', listing_text):
+				year = re.sub(r'([1-2][0-9][0-9][0-9])(.*)', r'\1', listing_text)
+				producer = re.sub(r'([1-2][0-9][0-9][0-9])(.*)', r'\2', listing_text)
+			else:
+				year = None
+				producer = listing_text
+
 			try:
-				itemAlerts = item_info.find('div', class_='itemAlerts').find('p').text
+				item_alerts = info_tag.find('div', class_='itemAlerts').find('p').text.strip()
 			except:
-				itemAlerts = 'None'
+				item_alerts = None
+
 			price = item.find('div', class_='price').find('a').text
 			item_code = item['data-item-id']
 
-			#print(name, itemAlerts, price)
-			print(item_code)
+			add_row_to_db_if_new(year, producer, price, item_code, \
+								site_name, item_alerts)
 
 		# Find link to next page and make a recursive call
 		link = soup.find('span', class_='pageNavigation').contents[-2]
@@ -160,7 +177,16 @@ def add_site_to_db_if_new(site_name):
 		db.session.add(new_site)
 		db.session.commit()
 
+def add_row_to_db_if_new(year, producer, price, item_code, site, alert=None):
+	if db.session.query(Listing.id).filter( \
+			Listing.item_code==item_code).scalar() is None:
+		site_id = db.session.query(AuctionSite.id).filter(AuctionSite.name==site)
 
+		if site_id is not None:
+			new_listing = Listing(year=year, producer=producer, alert=alert, \
+							price=price, item_code=item_code, site_id=site_id)
+			db.session.add(new_listing)
+			db.session.commit()
 
 
 if __name__ == "__main__":

@@ -40,7 +40,7 @@ class TestingConfig(Config):
 	TESTING = True
 	SQLALCHEMY_DATABASE_URI =\
 		'mysql+mysqlconnector://root:' + os.getenv('DB_PASS') + \
-		'@localhost:3306/wine_scraper_testdb'
+		'@localhost:3306/wine_scraper_testdb?charset=utf8mb4'
 
 class ProductionConfig(Config):
 	'''
@@ -48,7 +48,7 @@ class ProductionConfig(Config):
 	'''
 	SQLALCHEMY_DATABASE_URI =\
 		'mysql+mysqlconnector://root:' + os.getenv('DB_PASS') + \
-		'@localhost:3306/wine_scraper_db'
+		'@localhost:3306/wine_scraper_db?charset=utf8mb4'
 
 # Dictionary of configurations. Will be passed to Application Factory
 config = {
