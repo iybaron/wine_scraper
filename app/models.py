@@ -1,9 +1,10 @@
 from datetime import datetime
 from flask import current_app
-from . import db, login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from flask_login import UserMixin
+from . import db, login_manager
+
 
 # AuctionSite table
 class AuctionSite(db.Model):
@@ -11,6 +12,7 @@ class AuctionSite(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(64), unique=True)
 	wines = db.relationship('Listing', backref='auction_sites')
+
 
 # Listing table
 class Listing(db.Model):
@@ -26,6 +28,7 @@ class Listing(db.Model):
 	active = db.Column(db.Boolean, default=True)
 	item_code = db.Column(db.String(32))
 	site_id = db.Column(db.Integer, db.ForeignKey('auction_sites.id'))
+
 
 # User table
 class User(UserMixin, db.Model):

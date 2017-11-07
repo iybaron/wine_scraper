@@ -10,6 +10,7 @@ from ..scrape import scrape_all
 def index():
 	return render_template('index.html')
 
+
 # Handles user search input
 @main.route('/search', methods=['GET', 'POST'])
 @login_required

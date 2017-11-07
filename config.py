@@ -1,5 +1,6 @@
 import os
 
+
 # Absolute path to base directory of project
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -19,6 +20,7 @@ class Config:
 	def init_app(app):
 		pass
 
+
 class DevelopmentConfig(Config):
 	'''
 	Configuration for development
@@ -33,6 +35,7 @@ class DevelopmentConfig(Config):
 		'mysql+mysqlconnector://root:' + os.getenv('DB_PASS') + \
 		'@localhost:3306/wine_scraper_devdb'
 
+
 class TestingConfig(Config):
 	'''
 	Configuration for testing
@@ -42,6 +45,7 @@ class TestingConfig(Config):
 		'mysql+mysqlconnector://root:' + os.getenv('DB_PASS') + \
 		'@localhost:3306/wine_scraper_testdb?charset=utf8mb4'
 
+
 class ProductionConfig(Config):
 	'''
 	Configuration for production
@@ -49,6 +53,7 @@ class ProductionConfig(Config):
 	SQLALCHEMY_DATABASE_URI =\
 		'mysql+mysqlconnector://root:' + os.getenv('DB_PASS') + \
 		'@localhost:3306/wine_scraper_db?charset=utf8mb4'
+
 
 # Dictionary of configurations. Will be passed to Application Factory
 config = {

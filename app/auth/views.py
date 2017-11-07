@@ -21,6 +21,7 @@ def login():
 	# If handling a GET request, render the template 
 	return render_template('auth/login.html', form=form)
 
+
 # Registration page
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -41,6 +42,7 @@ def register():
 	# If handling a GET request, render the template 
 	return render_template('auth/register.html', form=form)
 
+
 # Resends confirmation email
 @auth.route('/confirm')
 @login_required
@@ -51,6 +53,7 @@ def resend_confirmation():
 			   token=token)
 	flash('A new confirmation email has been sent to your inbox.')
 	return redirect(url_for('main.index'))
+
 
 # Handles confirmation of user emails
 @auth.route('/confirm/<token>')
@@ -64,6 +67,7 @@ def confirm(token):
 		flash('The confirmation link is invalid or has expired.')
 	return redirect(url_for('main.index'))
 
+
 # Called when users log out
 @auth.route('/logout')
 @login_required
@@ -73,6 +77,7 @@ def logout():
 	flash('You have been logged out.')
 	return redirect(url_for('main.index'))
 
+
 # Before request hook
 @auth.before_app_request
 def before_request():
@@ -80,6 +85,7 @@ def before_request():
 	if current_user.is_authenticated and not current_user.confirmed \
 	and request.endpoint[:5] != 'auth.':
 		return redirect(url_for('auth.unconfirmed'))
+
 
 # Called when unconfirmed users make a request
 @auth.route('/unconfirmed')

@@ -1,14 +1,16 @@
 import sys
+import re
 import requests
 from bs4 import BeautifulSoup, Tag
-import re
 from . import db
 from .models import AuctionSite, Listing
+
 
 def scrape_all():
 	scrape_tkwine()
 	scrape_spectrum()
 	scrape_winebid()
+
 
 def scrape_tkwine():
 	"""
@@ -116,6 +118,7 @@ def scrape_spectrum():
 	for link in links:
 		scrape_page(link['href'])
 
+
 def scrape_winebid():
 	"""
 	Scrapes WineBid for current listings prices
@@ -176,6 +179,7 @@ def add_site_to_db_if_new(site_name):
 		new_site = AuctionSite(name=site_name)
 		db.session.add(new_site)
 		db.session.commit()
+
 
 def add_row_to_db_if_new(year, producer, price, item_code, site, alert=None):
 	if db.session.query(Listing.id).filter( \

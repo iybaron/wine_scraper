@@ -10,6 +10,7 @@ class LoginForm(FlaskForm):
 	password = PasswordField('Password', validators=[(Required())])
 	submit = SubmitField('Log In')
 
+
 # Form for registration page
 class RegistrationForm(FlaskForm):
 	# Email is required and must be in the proper format
