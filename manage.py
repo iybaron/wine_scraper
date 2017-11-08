@@ -2,7 +2,7 @@ import os
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
 from app import create_app, db
-from app.models import User
+from app.models import AuctionSite, Listing, User
 from app.scrape import scrape_all
 
 
@@ -15,7 +15,8 @@ migrate = Migrate(app, db)
 
 # Provide shell interaction with app context
 def make_shell_context():
-	return dict(app=app, db=db, User=User)
+	return dict(app=app, db=db, AuctionSite=AuctionSite, 
+				Listing=Listing, User=User)
 manager.add_command('shell', Shell(make_context=make_shell_context))
 
 # Provide easy command line database migration
