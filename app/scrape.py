@@ -1,6 +1,9 @@
+import os
 import sys
 import re
 import requests
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from bs4 import BeautifulSoup, Tag
 from . import db
 from .models import AuctionSite, Listing
@@ -174,25 +177,56 @@ def scrape_winebid():
 	
 
 def add_site_to_db_if_new(site_name):
-	if db.session.query(AuctionSite.id).filter( \
+	session = get_active_db_session()
+
+	if session.query(AuctionSite.id).filter( \
 			AuctionSite.name==site_name).scalar() is None:
 		new_site = AuctionSite(name=site_name)
-		db.session.add(new_site)
-		db.session.commit()
+		session.add(new_site)
+		session.commit()
 
 
 def add_row_to_db_if_new(year, producer, price, item_code, site, alert=None):
-	if db.session.query(Listing.id).filter( \
+	session = get_active_db_session()
+
+	if session.query(Listing.id).filter( \
 			Listing.item_code==item_code).scalar() is None:
-		site_id = db.session.query(AuctionSite.id).filter(AuctionSite.name==site)
+		site_id = session.query(AuctionSite.id).filter(AuctionSite.name==site)
 
 		if site_id is not None:
 			new_listing = Listing(year=year, producer=producer, alert=alert, \
 							price=price, item_code=item_code, site_id=site_id)
-			db.session.add(new_listing)
-			db.session.commit()
+			session.add(new_listing)
+			session.commit()
+
+
+def create_db_session():
+	"""
+	Connect to database when scrape_all is called outside of full app
+	"""
+	engine = create_engine(
+			'mysql+mysqlconnector://root:' + os.getenv('DB_PASS') + \
+			'@localhost:3306/wine_scraper_devdb'
+	)
+
+	Session = sessionmaker(bind=engine)
+	session = Session()
+
+	return session
+
+
+def get_active_db_session():
+	"""
+	Return db.session if app is running, or create a new session if not
+	"""
+	if(os.getenv('CRON_JOB') == '1'):
+		session = create_db_session()
+	else:
+		session = db.session
+
+	return session
 
 
 if __name__ == "__main__":
-	scrape_tkwine()
+	scrape_all()
 	
